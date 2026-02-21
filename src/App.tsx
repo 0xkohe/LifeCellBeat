@@ -8,34 +8,27 @@ import { Volume2 } from 'lucide-react';
 const GRID_SIZE = 64;
 const CANVAS_SIZE = 800;
 
+export type StampType = 'draw' | 'glider' | 'blinker' | 'lwss' | 'rpento';
+
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [currentPreset, setCurrentPreset] = useState<SynthPresetName>('pluck');
   const [currentScale, setCurrentScale] = useState<ScaleName>('pentatonic');
-  const [mutationRate, setMutationRate] = useState<number>(3);
+  const [mutationRate, setMutationRate] = useState<number>(0);
   const [bpm, setBpm] = useState<number>(100);
   const [currentChordName, setCurrentChordName] = useState<string>('');
+  const [stampType, setStampType] = useState<StampType>('draw');
 
   const engineRef = useRef<NCAEngine | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
-
   const requestRef = useRef<number>(0);
   const lastTimeRef = useRef<number>(0);
 
-  // Initialize Engines
   useEffect(() => {
     engineRef.current = new NCAEngine(GRID_SIZE, GRID_SIZE);
     audioRef.current = new AudioEngine(GRID_SIZE, GRID_SIZE);
-
-    // Seed with an R-pentomino in the center for interesting initial behavior
-    engineRef.current.insertRPentomino(GRID_SIZE / 2, GRID_SIZE / 2, 0.6);
-    engineRef.current.insertGlider(GRID_SIZE / 4, GRID_SIZE / 4, 0.3);
-    engineRef.current.insertGlider(GRID_SIZE * 3 / 4, GRID_SIZE / 3, 0.8);
-
-    return () => {
-      cancelAnimationFrame(requestRef.current);
-    };
+    return () => { cancelAnimationFrame(requestRef.current); };
   }, []);
 
   const animate = useCallback((time: number) => {
@@ -45,42 +38,23 @@ function App() {
     if (isPlaying && engineRef.current && audioRef.current && deltaTime > 0.05) {
       lastTimeRef.current = time;
 
-      // Auto-mutate: inject gliders instead of random noise for musical traveling patterns
-      if (mutationRate > 0) {
-        if (Math.random() < mutationRate * 0.02) {
-          const color = Math.random();
-          const r = Math.random();
-          if (r < 0.5) {
-            engineRef.current.insertGlider(
-              Math.floor(Math.random() * GRID_SIZE),
-              Math.floor(Math.random() * GRID_SIZE),
-              color
-            );
-          } else if (r < 0.8) {
-            engineRef.current.insertSpaceship(
-              Math.floor(Math.random() * GRID_SIZE),
-              Math.floor(Math.random() * GRID_SIZE),
-              color
-            );
-          } else {
-            engineRef.current.insertRPentomino(
-              Math.floor(Math.random() * GRID_SIZE),
-              Math.floor(Math.random() * GRID_SIZE),
-              color
-            );
-          }
-        }
+      // Auto-seed: inject diverse patterns (default off, user controls)
+      if (mutationRate > 0 && Math.random() < mutationRate * 0.015) {
+        const r = Math.random();
+        const color = Math.random();
+        const x = Math.floor(Math.random() * (GRID_SIZE - 5));
+        const y = Math.floor(Math.random() * (GRID_SIZE - 5));
+        if (r < 0.4) engineRef.current.insertGlider(x, y, color);
+        else if (r < 0.7) engineRef.current.insertSpaceship(x, y, color);
+        else engineRef.current.insertRPentomino(x, y, color);
       }
 
       engineRef.current.step();
-
       const grid = engineRef.current.getCurrentGrid();
       if (hasStarted) {
         audioRef.current.processGrid(grid, GRID_SIZE, GRID_SIZE, 2, deltaTime);
         const newChord = audioRef.current.getCurrentChordName();
-        if (newChord !== currentChordName) {
-          setCurrentChordName(newChord);
-        }
+        if (newChord !== currentChordName) setCurrentChordName(newChord);
       }
     }
 
@@ -111,26 +85,65 @@ function App() {
   const resetGrid = () => {
     if (engineRef.current) {
       engineRef.current = new NCAEngine(GRID_SIZE, GRID_SIZE);
-      engineRef.current.insertRPentomino(GRID_SIZE / 2, GRID_SIZE / 2, 0.6);
     }
+    setIsPlaying(false);
   };
 
-  const randomizeGrid = async () => {
-    await startAudio();
-    engineRef.current?.randomize();
-    if (!isPlaying) setIsPlaying(true);
+  /** Place a diverse mix of patterns across a 3×3 grid partition */
+  const generatePattern = () => {
+    if (!engineRef.current) return;
+    // Clear first
+    engineRef.current = new NCAEngine(GRID_SIZE, GRID_SIZE);
+
+    const patterns = [
+      (x: number, y: number, c: number) => engineRef.current!.insertGlider(x, y, c),
+      (x: number, y: number, c: number) => engineRef.current!.insertSpaceship(x, y, c),
+      (x: number, y: number, c: number) => engineRef.current!.insertRPentomino(x, y, c),
+      (x: number, y: number, c: number) => engineRef.current!.insertPattern(x, y, 3),
+    ];
+
+    // Place 1–2 patterns in each of 9 grid sectors
+    const sectorSize = GRID_SIZE / 3;
+    for (let sy = 0; sy < 3; sy++) {
+      for (let sx = 0; sx < 3; sx++) {
+        const count = Math.random() < 0.4 ? 2 : 1;
+        for (let _c = 0; _c < count; _c++) {
+          const px = Math.floor(sx * sectorSize + Math.random() * (sectorSize - 6));
+          const py = Math.floor(sy * sectorSize + Math.random() * (sectorSize - 6));
+          const fn = patterns[Math.floor(Math.random() * patterns.length)];
+          fn(px, py, (sx + sy * 3) / 8); // color by sector position
+        }
+      }
+    }
   };
 
   const handleInteract = async (x: number, y: number) => {
     await startAudio();
     if (!isPlaying) setIsPlaying(true);
-    if (engineRef.current) {
-      const r = Math.random();
-      if (r < 0.4) {
-        engineRef.current.insertPattern(Math.min(x, GRID_SIZE - 1), Math.min(y, GRID_SIZE - 1), 3);
-      } else {
-        engineRef.current.insertGlider(Math.min(x, GRID_SIZE - 3), Math.min(y, GRID_SIZE - 3), Math.random());
-      }
+    if (!engineRef.current) return;
+
+    const color = Math.random();
+    const cx = Math.min(x, GRID_SIZE - 5);
+    const cy = Math.min(y, GRID_SIZE - 5);
+
+    switch (stampType) {
+      case 'glider':
+        engineRef.current.insertGlider(cx, cy, color);
+        break;
+      case 'blinker':
+        // Place a classic blinker (3-cell horizontal line = oscillator)
+        engineRef.current.insertBlinker(cx, cy, color);
+        break;
+      case 'lwss':
+        engineRef.current.insertSpaceship(cx, cy, color);
+        break;
+      case 'rpento':
+        engineRef.current.insertRPentomino(cx, cy, color);
+        break;
+      case 'draw':
+      default:
+        engineRef.current.insertPattern(cx, cy, 2);
+        break;
     }
   };
 
@@ -138,7 +151,6 @@ function App() {
     setCurrentPreset(preset);
     await startAudio();
     audioRef.current?.setPreset(preset);
-    if (!isPlaying) setIsPlaying(true);
   };
 
   const handleScaleChange = async (scale: ScaleName) => {
@@ -152,16 +164,18 @@ function App() {
     audioRef.current?.setBpm(newBpm);
   };
 
+  const isEmpty = !hasStarted && !isPlaying;
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-6 text-slate-200">
-      <div className="max-w-4xl w-full flex flex-col items-center gap-6">
+      <div className="max-w-4xl w-full flex flex-col items-center gap-5">
 
-        <div className="text-center space-y-2 mt-2">
+        <div className="text-center space-y-1.5 mt-2">
           <h1 className="text-4xl md:text-5xl font-extrabold font-heading tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400">
             Neural Soundscape
           </h1>
           <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed">
-            Draw on the grid and let the cellular automaton compose music.
+            Place patterns on the grid, then press Play to hear the automaton compose.
           </p>
         </div>
 
@@ -176,14 +190,15 @@ function App() {
                 gridSize={GRID_SIZE}
                 onInteract={handleInteract}
               />
-              {!hasStarted && (
-                <div className="absolute inset-0 bg-black/75 flex items-center justify-center backdrop-blur-md pointer-events-none">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="p-4 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 animate-bounce">
-                      <Volume2 size={32} />
+              {isEmpty && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-sm pointer-events-none">
+                  <div className="flex flex-col items-center gap-3 text-center px-6">
+                    <div className="p-4 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                      <Volume2 size={28} />
                     </div>
-                    <p className="text-white text-base font-medium tracking-wide">
-                      Click anywhere on the grid or press Play to begin
+                    <p className="text-white/80 text-sm font-medium">
+                      Draw on the grid or click <strong>Generate</strong> to place patterns,<br />
+                      then press <strong>Play</strong> to start the music.
                     </p>
                   </div>
                 </div>
@@ -199,13 +214,15 @@ function App() {
           mutationRate={mutationRate}
           bpm={bpm}
           currentChordName={currentChordName}
+          stampType={stampType}
           onTogglePlay={togglePlay}
           onReset={resetGrid}
-          onRandomize={randomizeGrid}
+          onGenerate={generatePattern}
           onChangePreset={handlePresetChange}
           onChangeScale={handleScaleChange}
           onChangeMutationRate={setMutationRate}
           onChangeBpm={handleBpmChange}
+          onChangeStamp={setStampType}
         />
 
       </div>

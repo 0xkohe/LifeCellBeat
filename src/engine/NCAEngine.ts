@@ -26,8 +26,7 @@ export class NCAEngine {
         this.gridB = new Float32Array(width * height * this.channels);
         this.stateA = new Uint8Array(width * height);
         this.stateB = new Uint8Array(width * height);
-
-        this.randomize();
+        // Start empty — user places their own patterns
     }
 
     public randomize() {
@@ -118,7 +117,21 @@ export class NCAEngine {
         }
     }
 
-    /** Insert an R-pentomino which creates chaotic, long-lasting behavior */
+    /** Insert a blinker (3-cell horizontal oscillator, period 2) */
+    public insertBlinker(cx: number, cy: number, color: number = 0.5) {
+        const grid = this.getCurrentGrid();
+        const state = this.getCurrentState();
+        for (let dx = -1; dx <= 1; dx++) {
+            const x = (cx + dx + this.width) % this.width;
+            const i = cy * this.width + x;
+            state[i] = 1;
+            const idx = i * this.channels;
+            grid[idx] = 1.0;
+            grid[idx + 1] = color;
+        }
+    }
+
+
     public insertRPentomino(cx: number, cy: number, color: number = 0.7) {
         const grid = this.getCurrentGrid();
         const state = this.getCurrentState();
