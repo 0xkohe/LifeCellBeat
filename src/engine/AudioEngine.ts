@@ -1,6 +1,7 @@
 import * as Tone from 'tone';
 
 export type SynthPresetName = 'pluck' | 'crystal' | 'pad';
+export type BassPresetName = 'sawtooth' | 'sub' | 'pluck' | 'upright';
 export type ScaleName = 'pentatonic' | 'minor' | 'major' | 'dorian';
 
 const SCALE_INTERVALS: Record<ScaleName, number[]> = {
@@ -383,6 +384,42 @@ export class AudioEngine {
             this.melodySynth.set({ oscillator: { type: 'sine' } as any, envelope: { attack: 0.6, decay: 1.0, sustain: 0.5, release: 2.5 } });
             this.mainFilter.frequency.rampTo(2500, 0.5);
             this.delay.wet.rampTo(0.15, 0.5);
+        }
+    }
+
+    public setBassPreset(preset: BassPresetName) {
+        if (preset === 'sawtooth') {
+            // Classic fat sawtooth — buzzy and warm
+            this.bassSynth.set({
+                oscillator: { type: 'sawtooth' } as any,
+                filter: { frequency: 500, type: 'lowpass' } as any,
+                envelope: { attack: 0.05, decay: 0.3, sustain: 0.2, release: 0.6 },
+            });
+            this.bassSynth.volume.value = -12;
+        } else if (preset === 'sub') {
+            // Deep sub-bass sine — pure low frequency
+            this.bassSynth.set({
+                oscillator: { type: 'sine' } as any,
+                filter: { frequency: 200, type: 'lowpass' } as any,
+                envelope: { attack: 0.01, decay: 0.5, sustain: 0.5, release: 0.8 },
+            });
+            this.bassSynth.volume.value = -8;
+        } else if (preset === 'pluck') {
+            // Punchy plucked bass — fast attack, fast decay
+            this.bassSynth.set({
+                oscillator: { type: 'triangle' } as any,
+                filter: { frequency: 800, type: 'lowpass' } as any,
+                envelope: { attack: 0.005, decay: 0.15, sustain: 0.0, release: 0.3 },
+            });
+            this.bassSynth.volume.value = -10;
+        } else if (preset === 'upright') {
+            // Warm upright/double bass character — midsy with slower attack
+            this.bassSynth.set({
+                oscillator: { type: 'sine' } as any,
+                filter: { frequency: 1200, type: 'lowpass' } as any,
+                envelope: { attack: 0.04, decay: 0.6, sustain: 0.3, release: 1.0 },
+            });
+            this.bassSynth.volume.value = -11;
         }
     }
 

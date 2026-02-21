@@ -1,11 +1,12 @@
 import { Play, Pause, RefreshCw, Sparkles, SlidersHorizontal, Music, Pencil, Zap, AlignJustify, Atom, Waves } from 'lucide-react';
-import type { SynthPresetName, ScaleName } from '../engine/AudioEngine';
+import type { SynthPresetName, ScaleName, BassPresetName } from '../engine/AudioEngine';
 import type { StampType } from '../App';
 
 interface ControlsProps {
     isPlaying: boolean;
     currentPreset: SynthPresetName;
     currentScale: ScaleName;
+    bassPreset: BassPresetName;
     mutationRate: number;
     bpm: number;
     currentChordName: string;
@@ -15,6 +16,7 @@ interface ControlsProps {
     onGenerate: () => void;
     onChangePreset: (preset: SynthPresetName) => void;
     onChangeScale: (scale: ScaleName) => void;
+    onChangeBassPreset: (preset: BassPresetName) => void;
     onChangeMutationRate: (rate: number) => void;
     onChangeBpm: (bpm: number) => void;
     onChangeStamp: (stamp: StampType) => void;
@@ -29,10 +31,10 @@ const STAMPS: { id: StampType; label: string; icon: React.ReactNode; desc: strin
 ];
 
 export const Controls = ({
-    isPlaying, currentPreset, currentScale, mutationRate, bpm,
+    isPlaying, currentPreset, currentScale, bassPreset, mutationRate, bpm,
     currentChordName, stampType,
     onTogglePlay, onReset, onGenerate,
-    onChangePreset, onChangeScale,
+    onChangePreset, onChangeScale, onChangeBassPreset,
     onChangeMutationRate, onChangeBpm, onChangeStamp,
 }: ControlsProps) => {
     return (
@@ -45,8 +47,8 @@ export const Controls = ({
                     <button
                         onClick={onTogglePlay}
                         className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium transition-all duration-300 text-sm shrink-0 ${isPlaying
-                                ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30'
-                                : 'bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 shadow-lg shadow-indigo-500/20'
+                            ? 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30'
+                            : 'bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-500 shadow-lg shadow-indigo-500/20'
                             }`}
                     >
                         {isPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
@@ -92,8 +94,8 @@ export const Controls = ({
                             onClick={() => onChangeStamp(s.id)}
                             title={s.desc}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${stampType === s.id
-                                    ? 'bg-violet-500/30 border-violet-400/50 text-violet-200 shadow-sm shadow-violet-500/20'
-                                    : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200'
+                                ? 'bg-violet-500/30 border-violet-400/50 text-violet-200 shadow-sm shadow-violet-500/20'
+                                : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:text-slate-200'
                                 }`}
                         >
                             {s.icon}
@@ -125,6 +127,26 @@ export const Controls = ({
                                 <option value="pluck" className="bg-slate-900">Pluck / Marimba</option>
                                 <option value="crystal" className="bg-slate-900">Crystal / Bells</option>
                                 <option value="pad" className="bg-slate-900">Soft Pad</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Bass Type */}
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
+                            <Waves size={14} className="text-emerald-400" />
+                        </div>
+                        <div className="flex flex-col flex-1 min-w-0">
+                            <label className="text-[10px] font-medium text-slate-500 uppercase tracking-widest mb-1">Bass Type</label>
+                            <select
+                                value={bassPreset}
+                                onChange={(e) => onChangeBassPreset(e.target.value as BassPresetName)}
+                                className="bg-black/30 text-slate-200 text-xs rounded-lg px-2 py-1.5 border border-white/10 focus:outline-none cursor-pointer w-full"
+                            >
+                                <option value="sawtooth" className="bg-slate-900">Sawtooth (Warm)</option>
+                                <option value="sub" className="bg-slate-900">Sub Bass (Deep)</option>
+                                <option value="pluck" className="bg-slate-900">Pluck (Punchy)</option>
+                                <option value="upright" className="bg-slate-900">Upright (Smooth)</option>
                             </select>
                         </div>
                     </div>

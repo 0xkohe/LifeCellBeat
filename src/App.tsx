@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { NCAEngine } from './engine/NCAEngine';
-import { AudioEngine, type SynthPresetName, type ScaleName } from './engine/AudioEngine';
+import { AudioEngine, type SynthPresetName, type ScaleName, type BassPresetName } from './engine/AudioEngine';
 import { GridCanvas } from './components/GridCanvas';
 import { Controls } from './components/Controls';
 import { Volume2 } from 'lucide-react';
@@ -15,6 +15,7 @@ function App() {
   const [hasStarted, setHasStarted] = useState(false);
   const [currentPreset, setCurrentPreset] = useState<SynthPresetName>('pluck');
   const [currentScale, setCurrentScale] = useState<ScaleName>('pentatonic');
+  const [bassPreset, setBassPreset] = useState<BassPresetName>('sawtooth');
   const [mutationRate, setMutationRate] = useState<number>(0);
   const [bpm, setBpm] = useState<number>(100);
   const [currentChordName, setCurrentChordName] = useState<string>('');
@@ -71,6 +72,7 @@ function App() {
       await audioRef.current.initialize();
       audioRef.current.setPreset(currentPreset);
       audioRef.current.setScale(currentScale);
+      audioRef.current.setBassPreset(bassPreset);
       audioRef.current.setBpm(bpm);
       setHasStarted(true);
       setCurrentChordName(audioRef.current.getCurrentChordName());
@@ -147,6 +149,12 @@ function App() {
     }
   };
 
+  const handleBassPresetChange = async (preset: BassPresetName) => {
+    setBassPreset(preset);
+    await startAudio();
+    audioRef.current?.setBassPreset(preset);
+  };
+
   const handlePresetChange = async (preset: SynthPresetName) => {
     setCurrentPreset(preset);
     await startAudio();
@@ -211,6 +219,7 @@ function App() {
           isPlaying={isPlaying}
           currentPreset={currentPreset}
           currentScale={currentScale}
+          bassPreset={bassPreset}
           mutationRate={mutationRate}
           bpm={bpm}
           currentChordName={currentChordName}
@@ -220,6 +229,7 @@ function App() {
           onGenerate={generatePattern}
           onChangePreset={handlePresetChange}
           onChangeScale={handleScaleChange}
+          onChangeBassPreset={handleBassPresetChange}
           onChangeMutationRate={setMutationRate}
           onChangeBpm={handleBpmChange}
           onChangeStamp={setStampType}
