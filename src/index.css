@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+:root {
+  --app-bg: #030014;
+}
+
+body {
+  background-color: var(--app-bg);
+  background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #030014 60%);
+  color: #e2e8f0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  user-select: none;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+.font-heading {
+  font-family: 'Outfit', sans-serif;
+}
