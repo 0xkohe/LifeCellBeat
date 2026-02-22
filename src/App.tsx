@@ -20,6 +20,7 @@ function App() {
   const [bpm, setBpm] = useState<number>(100);
   const [currentChordName, setCurrentChordName] = useState<string>('');
   const [stampType, setStampType] = useState<StampType>('draw');
+  const [autoModulate, setAutoModulate] = useState<boolean>(true);
 
   const engineRef = useRef<NCAEngine | null>(null);
   const audioRef = useRef<AudioEngine | null>(null);
@@ -74,6 +75,7 @@ function App() {
       audioRef.current.setScale(currentScale);
       audioRef.current.setBassPreset(bassPreset);
       audioRef.current.setBpm(bpm);
+      audioRef.current.enableAutoModulate(autoModulate);
       setHasStarted(true);
       setCurrentChordName(audioRef.current.getCurrentChordName());
     }
@@ -133,7 +135,6 @@ function App() {
         engineRef.current.insertGlider(cx, cy, color);
         break;
       case 'blinker':
-        // Place a classic blinker (3-cell horizontal line = oscillator)
         engineRef.current.insertBlinker(cx, cy, color);
         break;
       case 'lwss':
@@ -172,6 +173,14 @@ function App() {
     audioRef.current?.setBpm(newBpm);
   };
 
+  const handleToggleAutoModulate = () => {
+    setAutoModulate(prev => {
+      const next = !prev;
+      audioRef.current?.enableAutoModulate(next);
+      return next;
+    });
+  };
+
   const isEmpty = !hasStarted && !isPlaying;
 
   return (
@@ -180,7 +189,7 @@ function App() {
 
         <div className="text-center space-y-1.5 mt-2">
           <h1 className="text-4xl md:text-5xl font-extrabold font-heading tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-indigo-400">
-            Neural Soundscape
+            LifeCellBeat
           </h1>
           <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed">
             Place patterns on the grid, then press Play to hear the automaton compose.
@@ -224,6 +233,7 @@ function App() {
           bpm={bpm}
           currentChordName={currentChordName}
           stampType={stampType}
+          autoModulate={autoModulate}
           onTogglePlay={togglePlay}
           onReset={resetGrid}
           onGenerate={generatePattern}
@@ -233,6 +243,7 @@ function App() {
           onChangeMutationRate={setMutationRate}
           onChangeBpm={handleBpmChange}
           onChangeStamp={setStampType}
+          onToggleAutoModulate={handleToggleAutoModulate}
         />
 
       </div>

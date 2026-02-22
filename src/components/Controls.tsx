@@ -1,4 +1,4 @@
-import { Play, Pause, RefreshCw, Sparkles, SlidersHorizontal, Music, Pencil, Zap, AlignJustify, Atom, Waves } from 'lucide-react';
+import { Play, Pause, RefreshCw, Sparkles, SlidersHorizontal, Music, Pencil, Zap, AlignJustify, Atom, Waves, Shuffle } from 'lucide-react';
 import type { SynthPresetName, ScaleName, BassPresetName } from '../engine/AudioEngine';
 import type { StampType } from '../App';
 
@@ -11,6 +11,7 @@ interface ControlsProps {
     bpm: number;
     currentChordName: string;
     stampType: StampType;
+    autoModulate: boolean;
     onTogglePlay: () => void;
     onReset: () => void;
     onGenerate: () => void;
@@ -20,6 +21,7 @@ interface ControlsProps {
     onChangeMutationRate: (rate: number) => void;
     onChangeBpm: (bpm: number) => void;
     onChangeStamp: (stamp: StampType) => void;
+    onToggleAutoModulate: () => void;
 }
 
 const STAMPS: { id: StampType; label: string; icon: React.ReactNode; desc: string }[] = [
@@ -32,10 +34,10 @@ const STAMPS: { id: StampType; label: string; icon: React.ReactNode; desc: strin
 
 export const Controls = ({
     isPlaying, currentPreset, currentScale, bassPreset, mutationRate, bpm,
-    currentChordName, stampType,
+    currentChordName, stampType, autoModulate,
     onTogglePlay, onReset, onGenerate,
     onChangePreset, onChangeScale, onChangeBassPreset,
-    onChangeMutationRate, onChangeBpm, onChangeStamp,
+    onChangeMutationRate, onChangeBpm, onChangeStamp, onToggleAutoModulate,
 }: ControlsProps) => {
     return (
         <div className="flex flex-col gap-4 bg-white/[0.03] p-5 rounded-2xl border border-white/[0.08] backdrop-blur-xl w-full max-w-[800px] shadow-2xl relative overflow-hidden">
@@ -124,9 +126,13 @@ export const Controls = ({
                                 onChange={(e) => onChangePreset(e.target.value as SynthPresetName)}
                                 className="bg-black/30 text-slate-200 text-xs rounded-lg px-2 py-1.5 border border-white/10 focus:outline-none cursor-pointer w-full"
                             >
-                                <option value="pluck" className="bg-slate-900">Pluck / Marimba</option>
+                                <option value="pluck" className="bg-slate-900">Pluck</option>
                                 <option value="crystal" className="bg-slate-900">Crystal / Bells</option>
                                 <option value="pad" className="bg-slate-900">Soft Pad</option>
+                                <option value="fmbell" className="bg-slate-900">FM Bell</option>
+                                <option value="bitcrush" className="bg-slate-900">Bitcrush 8bit</option>
+                                <option value="strings" className="bg-slate-900">Strings</option>
+                                <option value="marimba" className="bg-slate-900">Marimba</option>
                             </select>
                         </div>
                     </div>
@@ -163,10 +169,24 @@ export const Controls = ({
                                 onChange={(e) => onChangeScale(e.target.value as ScaleName)}
                                 className="bg-black/30 text-slate-200 text-xs rounded-lg px-2 py-1.5 border border-white/10 focus:outline-none cursor-pointer w-full"
                             >
-                                <option value="pentatonic" className="bg-slate-900">Pentatonic Minor</option>
-                                <option value="minor" className="bg-slate-900">Natural Minor</option>
-                                <option value="major" className="bg-slate-900">Major</option>
-                                <option value="dorian" className="bg-slate-900">Dorian</option>
+                                <optgroup label="Western" className="bg-slate-900">
+                                    <option value="pentatonic" className="bg-slate-900">Pentatonic Minor</option>
+                                    <option value="minor" className="bg-slate-900">Natural Minor</option>
+                                    <option value="major" className="bg-slate-900">Major</option>
+                                    <option value="dorian" className="bg-slate-900">Dorian</option>
+                                    <option value="mixolydian" className="bg-slate-900">Mixolydian</option>
+                                    <option value="phrygian" className="bg-slate-900">Phrygian (Spanish)</option>
+                                    <option value="lydian" className="bg-slate-900">Lydian (Ethereal)</option>
+                                    <option value="harmonicMinor" className="bg-slate-900">Harmonic Minor</option>
+                                </optgroup>
+                                <optgroup label="Special" className="bg-slate-900">
+                                    <option value="blues" className="bg-slate-900">Blues</option>
+                                    <option value="wholeTone" className="bg-slate-900">Whole Tone (Dream)</option>
+                                </optgroup>
+                                <optgroup label="Japanese" className="bg-slate-900">
+                                    <option value="japanese" className="bg-slate-900">都節 Miyako-bushi</option>
+                                    <option value="hirajoshi" className="bg-slate-900">平調子 Hirajoshi</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -196,6 +216,18 @@ export const Controls = ({
                             className="w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-amber-500"
                         />
                     </div>
+
+                    {/* Auto-Modulate toggle */}
+                    <button
+                        onClick={onToggleAutoModulate}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${autoModulate
+                            ? 'bg-fuchsia-500/25 border-fuchsia-400/40 text-fuchsia-200'
+                            : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+                            }`}
+                    >
+                        <Shuffle size={13} />
+                        <span>Auto-Modulate {autoModulate ? 'ON' : 'OFF'}</span>
+                    </button>
                 </div>
             </div>
 
@@ -204,6 +236,7 @@ export const Controls = ({
                 <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-violet-500/60" /><span className="text-[10px] text-slate-500">Melody</span></div>
                 <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-cyan-500/60" /><span className="text-[10px] text-slate-500">Harmony</span></div>
                 <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-emerald-500/60" /><span className="text-[10px] text-slate-500">Bass</span></div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-rose-500/60" /><span className="text-[10px] text-slate-500">Drums</span></div>
             </div>
         </div>
     );
