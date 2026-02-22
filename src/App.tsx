@@ -103,7 +103,7 @@ function App() {
       (x: number, y: number, c: number) => engineRef.current!.insertGlider(x, y, c),
       (x: number, y: number, c: number) => engineRef.current!.insertSpaceship(x, y, c),
       (x: number, y: number, c: number) => engineRef.current!.insertRPentomino(x, y, c),
-      (x: number, y: number, c: number) => engineRef.current!.insertPattern(x, y, 3),
+      (x: number, y: number, _c: number) => engineRef.current!.insertPattern(x, y, 3),
     ];
 
     // Place 1–2 patterns in each of 9 grid sectors

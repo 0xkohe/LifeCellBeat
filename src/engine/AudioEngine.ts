@@ -10,18 +10,18 @@ export type ScaleName =
 
 // ─── Scale definitions ──────────────────────────────────────────────────────
 const SCALE_INTERVALS: Record<ScaleName, number[]> = {
-    pentatonic:    [0, 3, 5, 7, 10],
-    minor:         [0, 2, 3, 5, 7, 8, 10],
-    major:         [0, 2, 4, 5, 7, 9, 11],
-    dorian:        [0, 2, 3, 5, 7, 9, 10],
-    mixolydian:    [0, 2, 4, 5, 7, 9, 10],
-    phrygian:      [0, 1, 3, 5, 7, 8, 10],
-    lydian:        [0, 2, 4, 6, 7, 9, 11],
+    pentatonic: [0, 3, 5, 7, 10],
+    minor: [0, 2, 3, 5, 7, 8, 10],
+    major: [0, 2, 4, 5, 7, 9, 11],
+    dorian: [0, 2, 3, 5, 7, 9, 10],
+    mixolydian: [0, 2, 4, 5, 7, 9, 10],
+    phrygian: [0, 1, 3, 5, 7, 8, 10],
+    lydian: [0, 2, 4, 6, 7, 9, 11],
     harmonicMinor: [0, 2, 3, 5, 7, 8, 11],
-    blues:         [0, 3, 5, 6, 7, 10],
-    wholeTone:     [0, 2, 4, 6, 8, 10],
-    japanese:      [0, 1, 5, 7, 8],
-    hirajoshi:     [0, 2, 3, 7, 8],
+    blues: [0, 3, 5, 6, 7, 10],
+    wholeTone: [0, 2, 4, 6, 8, 10],
+    japanese: [0, 1, 5, 7, 8],
+    hirajoshi: [0, 2, 3, 7, 8],
 };
 
 const SCALE_LABELS: Record<ScaleName, string> = {
@@ -35,25 +35,25 @@ const ALL_SCALE_NAMES: ScaleName[] = Object.keys(SCALE_INTERVALS) as ScaleName[]
 
 // ─── Chord system ───────────────────────────────────────────────────────────
 const CHORD_TYPES = {
-    open5:   [0, 4],
-    minor7:  [0, 2, 4, 6],
-    add9:    [0, 2, 4, 6, 1],
-    sus4:    [0, 3, 4],
-    aug:     [0, 2, 3, 5],
-    maj7:    [0, 2, 4, 6],
-    dim7:    [0, 2, 3, 5],
-    dom7:    [0, 2, 4, 5],
+    open5: [0, 4],
+    minor7: [0, 2, 4, 6],
+    add9: [0, 2, 4, 6, 1],
+    sus4: [0, 3, 4],
+    aug: [0, 2, 3, 5],
+    maj7: [0, 2, 4, 6],
+    dim7: [0, 2, 3, 5],
+    dom7: [0, 2, 4, 5],
 };
 type ChordType = keyof typeof CHORD_TYPES;
 
 // Chord progressions for different CA phases
 type CAPhase = 'sparse' | 'growing' | 'chaotic' | 'declining' | 'stable';
 const PHASE_PROGRESSIONS: Record<CAPhase, { chords: ChordType[]; roots: number[] }> = {
-    sparse:    { chords: ['open5', 'minor7', 'open5', 'sus4'],         roots: [0, 4, 0, 3] },
-    growing:   { chords: ['maj7', 'dom7', 'add9', 'maj7'],            roots: [0, 3, 4, 0] },
-    stable:    { chords: ['minor7', 'add9', 'minor7', 'sus4'],        roots: [0, 2, 4, 3] },
-    chaotic:   { chords: ['aug', 'dim7', 'sus4', 'dom7'],             roots: [0, 1, 3, 4] },
-    declining: { chords: ['sus4', 'minor7', 'open5', 'minor7'],       roots: [4, 3, 0, 2] },
+    sparse: { chords: ['open5', 'minor7', 'open5', 'sus4'], roots: [0, 4, 0, 3] },
+    growing: { chords: ['maj7', 'dom7', 'add9', 'maj7'], roots: [0, 3, 4, 0] },
+    stable: { chords: ['minor7', 'add9', 'minor7', 'sus4'], roots: [0, 2, 4, 3] },
+    chaotic: { chords: ['aug', 'dim7', 'sus4', 'dom7'], roots: [0, 1, 3, 4] },
+    declining: { chords: ['sus4', 'minor7', 'open5', 'minor7'], roots: [4, 3, 0, 2] },
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -261,7 +261,6 @@ export class AudioEngine {
         this.clapSynth.connect(this.compressor);
 
         this.cymbalSynth = new Tone.MetalSynth({
-            frequency: 300,
             envelope: { attack: 0.001, decay: 0.6, release: 0.3 },
             harmonicity: 5.1,
             modulationIndex: 16,
@@ -616,8 +615,8 @@ export class AudioEngine {
         const durationPool: Tone.Unit.Time[] = stability > 0.7
             ? ['4n', '4n', '2n', '4n.']
             : stability > 0.4
-            ? ['8n', '4n', '8n.', '8n']
-            : ['16n', '8n', '16n', '8n.'];
+                ? ['8n', '4n', '8n.', '8n']
+                : ['16n', '8n', '16n', '8n.'];
 
         // Density drives note chance
         const density = Math.min(1, this.smoothedClusters * 3);
@@ -697,9 +696,9 @@ export class AudioEngine {
         }
         // ── Motif recall: when density returns to a similar state ──────────
         else if (this.motifBuffer.length >= 4 &&
-                 Math.abs(this.smoothedDensity - this.motifDensitySnapshot) < 0.05 &&
-                 this.generationCount - this.motifRecordedAt > 200 &&
-                 Math.random() < 0.3) {
+            Math.abs(this.smoothedDensity - this.motifDensitySnapshot) < 0.05 &&
+            this.generationCount - this.motifRecordedAt > 200 &&
+            Math.random() < 0.3) {
             // Replay the motif with variation
             const motifNote = this.motifBuffer[this.stepIndex % this.motifBuffer.length];
             const variation = Math.random() < 0.3 ? (Math.random() < 0.5 ? 1 : -1) : 0;
